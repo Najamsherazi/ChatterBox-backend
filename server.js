@@ -1,18 +1,39 @@
-import express from "express";
-import cors from "cors";
-import mongoose from "mongoose";
-import dotenv from "dotenv";
+// server.js
+const express = require('express');
+const mongoose = require('mongoose');
+const jwt = require('jsonwebtoken'); // only if you use JWT
+require('dotenv').config(); // only used for local development
 
-dotenv.config();
 const app = express();
-app.use(cors());
+
+// Middleware
 app.use(express.json());
 
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log("✅ MongoDB Connected"))
-  .catch((err) => console.log(err));
+// Environment variables from Render
+const mongoURI = process.env.MONGO_URI;
+const jwtSecret = process.env.JWT_SECRET;
+const port = process.env.PORT || 5000; // use Render's PORT or fallback locally
 
-app.get("/", (req, res) => res.send("ChatterBox API running"));
+// Connect to MongoDB
+mongoose.connect(mongoURI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+})
+.then(() => console.log('✅ Connected to MongoDB'))
+.catch(err => console.error('❌ MongoDB connection error:', err));
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+// Test route
+app.get('/', (req, res) => {
+  res.send('ChatterBox backend is running!');
+});
+
+// Example: JWT usage (optional)
+app.get('/token', (req, res) => {
+  const token = jwt.sign({ user: 'testUser' }, jwtSecret, { expiresIn: '1h' });
+  res.json({ token });
+});
+
+// Start server
+app.listen(port, () => {
+  console.log(`🚀 Server running on port ${port}`);
+});
